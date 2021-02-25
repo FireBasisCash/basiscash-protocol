@@ -14,23 +14,32 @@ contract InitialShareDistributor is IDistributor {
     bool public once = true;
 
     IERC20 public share;
-    IRewardDistributionRecipient public daibacLPPool;
-    uint256 public daibacInitialBalance;
-    IRewardDistributionRecipient public daibasLPPool;
-    uint256 public daibasInitialBalance;
+
+    IRewardDistributionRecipient usdtfbcLPPool;
+    uint256 usdtfbcInitialBalance;
+
+    IRewardDistributionRecipient usdtfbsLPPool;
+    uint256 usdtfbsInitialBalance;
+
+    IRewardDistributionRecipient usdtfbgLPPool;
+    uint256 usdtfbgInitialBalance;
 
     constructor(
         IERC20 _share,
-        IRewardDistributionRecipient _daibacLPPool,
-        uint256 _daibacInitialBalance,
-        IRewardDistributionRecipient _daibasLPPool,
-        uint256 _daibasInitialBalance
+        IRewardDistributionRecipient _usdtfbcLPPool,
+        uint256 _usdtfbcInitialBalance,
+        IRewardDistributionRecipient _usdtfbsLPPool,
+        uint256 _usdtfbsInitialBalance,
+        IRewardDistributionRecipient _usdtfbgLPPool,
+        uint256 _usdtfbgInitialBalance
     ) public {
         share = _share;
-        daibacLPPool = _daibacLPPool;
-        daibacInitialBalance = _daibacInitialBalance;
-        daibasLPPool = _daibasLPPool;
-        daibasInitialBalance = _daibasInitialBalance;
+        usdtfbcLPPool = _usdtfbcLPPool;
+        usdtfbcInitialBalance = _usdtfbcInitialBalance;
+        usdtfbsLPPool = _usdtfbsLPPool;
+        usdtfbsInitialBalance = _usdtfbsInitialBalance;
+        usdtfbgLPPool = _usdtfbgLPPool;
+        usdtfbgInitialBalance = _usdtfbgInitialBalance;
     }
 
     function distribute() public override {
@@ -39,13 +48,17 @@ contract InitialShareDistributor is IDistributor {
             "InitialShareDistributor: you cannot run this function twice"
         );
 
-        share.transfer(address(daibacLPPool), daibacInitialBalance);
-        daibacLPPool.notifyRewardAmount(daibacInitialBalance);
-        emit Distributed(address(daibacLPPool), daibacInitialBalance);
+        share.transfer(address(usdtfbcLPPool), usdtfbcInitialBalance);
+        usdtfbcLPPool.notifyRewardAmount(usdtfbcInitialBalance);
+        emit Distributed(address(usdtfbcLPPool), usdtfbcInitialBalance);
 
-        share.transfer(address(daibasLPPool), daibasInitialBalance);
-        daibasLPPool.notifyRewardAmount(daibasInitialBalance);
-        emit Distributed(address(daibasLPPool), daibasInitialBalance);
+        share.transfer(address(usdtfbsLPPool), usdtfbsInitialBalance);
+        usdtfbsLPPool.notifyRewardAmount(usdtfbsInitialBalance);
+        emit Distributed(address(usdtfbsLPPool), usdtfbsInitialBalance);
+
+        share.transfer(address(usdtfbgLPPool), usdtfbgInitialBalance);
+        usdtfbgLPPool.notifyRewardAmount(usdtfbgInitialBalance);
+        emit Distributed(address(usdtfbgLPPool), usdtfbgInitialBalance);
 
         once = false;
     }

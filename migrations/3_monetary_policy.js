@@ -4,8 +4,9 @@ const knownContracts = require('./known-contracts');
 const Cash = artifacts.require('Cash');
 const Bond = artifacts.require('Bond');
 const Share = artifacts.require('Share');
+const Governance = artifacts.require('Governance');
+const USDT = artifacts.require('USDT');
 const IERC20 = artifacts.require('IERC20');
-const MockDai = artifacts.require('MockDai');
 
 const Oracle = artifacts.require('Oracle')
 const Boardroom = artifacts.require('Boardroom')
@@ -28,48 +29,48 @@ async function migration(deployer, network, accounts) {
     uniswapRouter = await UniswapV2Router02.at(knownContracts.UniswapV2Router02[network]);
   }
 
-  const dai = network === 'mainnet'
-    ? await IERC20.at(knownContracts.DAI[network])
-    : await MockDai.deployed();
+  const usdt = network=="mainnet"?IERC20.at(knownContracts.USDT[network]):await USDT.deployed();
 
-  // 2. provide liquidity to BAC-DAI and BAS-DAI pair
-  // if you don't provide liquidity to BAC-DAI and BAS-DAI pair after step 1 and before step 3,
+  // 2. provide liquidity to FBC-USDT and FBS-USDT pair
+  // if you don't provide liquidity to FBC-USDT and FBS-USDT pair after step 1 and before step 3,
   //  creating Oracle will fail with NO_RESERVES error.
   const unit = web3.utils.toBN(10 ** 18).toString();
   const max = web3.utils.toBN(10 ** 18).muln(10000).toString();
 
   const cash = await Cash.deployed();
   const share = await Share.deployed();
+  const governance = await Governance.deployed();
 
   console.log('Approving Uniswap on tokens for liquidity');
   await Promise.all([
     approveIfNot(cash, accounts[0], uniswapRouter.address, max),
     approveIfNot(share, accounts[0], uniswapRouter.address, max),
-    approveIfNot(dai, accounts[0], uniswapRouter.address, max),
+    approveIfNot(usdt, accounts[0], uniswapRouter.address, max),
   ]);
 
-  // WARNING: msg.sender must hold enough DAI to add liquidity to BAC-DAI & BAS-DAI pools
+  // WARNING: msg.sender must hold enough DAI to add liquidity to FBC-USDT & FBS-USDT pools
   // otherwise transaction will revert
   console.log('Adding liquidity to pools');
   await uniswapRouter.addLiquidity(
-    cash.address, dai.address, unit, unit, unit, unit, accounts[0], deadline(),
+    cash.address, usdt.address, unit, unit, unit, unit, accounts[0], deadline(),
   );
   await uniswapRouter.addLiquidity(
-    share.address, dai.address, unit, unit, unit, unit, accounts[0],  deadline(),
+    share.address, usdt.address, unit, unit, unit, unit, accounts[0], deadline(),
   );
 
-  console.log(`DAI-BAC pair address: ${await uniswap.getPair(dai.address, cash.address)}`);
-  console.log(`DAI-BAS pair address: ${await uniswap.getPair(dai.address, share.address)}`);
+  console.log(`USDT-FBC pair address: ${await uniswap.getPair(usdt.address, cash.address)}`);
+  console.log(`USDT-FBS pair address: ${await uniswap.getPair(usdt.address, share.address)}`);
+  
 
   // Deploy boardroom
   await deployer.deploy(Boardroom, cash.address, share.address);
 
-  // 2. Deploy oracle for the pair between bac and dai
+  // 2. Deploy oracle for the pair between FBC and USDT
   await deployer.deploy(
     Oracle,
     uniswap.address,
     cash.address,
-    dai.address,
+    usdt.address,
   );
 
   await deployer.deploy(
@@ -78,7 +79,7 @@ async function migration(deployer, network, accounts) {
     Bond.address,
     share.address,
     Oracle.address,
-    dai.address,
+    usdt.address,
     Boardroom.address,
   );
 }

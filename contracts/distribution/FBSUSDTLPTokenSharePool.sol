@@ -62,41 +62,16 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../interfaces/IRewardDistributionRecipient.sol";
 
-contract yCRVWrapper {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+import "../token/LPTokenWrapper.sol";
 
-    IERC20 public ycrv;
+contract FBSUSDTLPTokenSharePool is
+    LPTokenWrapper,
+    IRewardDistributionRecipient
+{
+    IERC20 public basisShare;
+    uint256 public DURATION = 365 days;
 
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
-
-    function totalSupply() public view virtual returns (uint256) {
-        return _totalSupply;
-    }
-
-    function balanceOf(address account) public view virtual returns (uint256) {
-        return _balances[account];
-    }
-
-    function stake(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.add(amount);
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
-        ycrv.safeTransferFrom(msg.sender, address(this), amount);
-    }
-
-    function withdraw(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        ycrv.safeTransfer(msg.sender, amount);
-    }
-}
-
-contract BACyCRVPool is yCRVWrapper, IRewardDistributionRecipient {
-    IERC20 public basisCash;
-    uint256 public DURATION = 5 days;
-
-    uint256 public starttime = 1600831965;
+    uint256 public starttime = 1614182740;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public lastUpdateTime;
@@ -110,13 +85,16 @@ contract BACyCRVPool is yCRVWrapper, IRewardDistributionRecipient {
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 
-    constructor(address basisCash_, address ycrv_) public {
-        basisCash = IERC20(basisCash_);
-        ycrv = IERC20(ycrv_);
+    constructor(address basisShare_, address lptoken_) public {
+        basisShare = IERC20(basisShare_);
+        lpt = IERC20(lptoken_);
     }
 
     modifier checkStart() {
-        require(block.timestamp >= starttime, "BACyCRVPool: not start");
+        require(
+            block.timestamp >= starttime,
+            "FBSUSDTLPTokenSharePool: not start"
+        );
         _;
     }
 
@@ -157,12 +135,17 @@ contract BACyCRVPool is yCRVWrapper, IRewardDistributionRecipient {
     }
 
     // stake visibility is public as overriding LPTokenWrapper's stake() function
-    function stake(uint256 amount) public updateReward(msg.sender) checkStart override {
-        require(amount > 0, "BACyCRVPool: Cannot stake 0");
+    function stake(uint256 amount)
+        public
+        override
+        updateReward(msg.sender)
+        checkStart
+    {
+        require(amount > 0, "FBSUSDTLPTokenSharePool: Cannot stake 0");
         uint256 newDeposit = deposits[msg.sender] + amount;
         require(
             newDeposit <= 20000e18,
-            "BACyCRVPool: deposit amount exceeds maximum 20000"
+            "FBSUSDTLPTokenSharePool: deposit amount exceeds maximum 20000"
         );
         deposits[msg.sender] = newDeposit;
         super.stake(amount);
@@ -171,11 +154,11 @@ contract BACyCRVPool is yCRVWrapper, IRewardDistributionRecipient {
 
     function withdraw(uint256 amount)
         public
+        override
         updateReward(msg.sender)
         checkStart
-        override
     {
-        require(amount > 0, "BACyCRVPool: Cannot withdraw 0");
+        require(amount > 0, "FBSUSDTLPTokenSharePool: Cannot withdraw 0");
         super.withdraw(amount);
         emit Withdrawn(msg.sender, amount);
     }
@@ -189,16 +172,16 @@ contract BACyCRVPool is yCRVWrapper, IRewardDistributionRecipient {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            basisCash.safeTransfer(msg.sender, reward);
+            basisShare.safeTransfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
         }
     }
 
     function notifyRewardAmount(uint256 reward)
         external
+        override
         onlyRewardDistribution
         updateReward(address(0))
-        override
     {
         if (block.timestamp > starttime) {
             if (block.timestamp >= periodFinish) {

@@ -62,11 +62,11 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../interfaces/IRewardDistributionRecipient.sol";
 
-contract DAIWrapper {
+contract FBGWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 public dai;
+    IERC20 public fbg;
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
@@ -82,21 +82,21 @@ contract DAIWrapper {
     function stake(uint256 amount) public virtual {
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
-        dai.safeTransferFrom(msg.sender, address(this), amount);
+        fbg.safeTransferFrom(msg.sender, address(this), amount);
     }
 
     function withdraw(uint256 amount) public virtual {
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        dai.safeTransfer(msg.sender, amount);
+        fbg.safeTransfer(msg.sender, amount);
     }
 }
 
-contract BACDAIPool is DAIWrapper, IRewardDistributionRecipient {
+contract FBGCashPool is FBGWrapper, IRewardDistributionRecipient {
     IERC20 public basisCash;
     uint256 public DURATION = 5 days;
 
-    uint256 public starttime = 1600831965;
+    uint256 public starttime = 1614182740;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public lastUpdateTime;
@@ -110,13 +110,16 @@ contract BACDAIPool is DAIWrapper, IRewardDistributionRecipient {
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 
-    constructor(address basisCash_, address dai_) public {
+    constructor(
+        address basisCash_,
+        address babisGovernance_
+    ) public {
         basisCash = IERC20(basisCash_);
-        dai = IERC20(dai_);
+        fbg = IERC20(babisGovernance_);
     }
 
     modifier checkStart() {
-        require(block.timestamp >= starttime, "BACDAIPool: not start");
+        require(block.timestamp >= starttime, "FBGCashPool: not start");
         _;
     }
 
@@ -157,12 +160,17 @@ contract BACDAIPool is DAIWrapper, IRewardDistributionRecipient {
     }
 
     // stake visibility is public as overriding LPTokenWrapper's stake() function
-    function stake(uint256 amount) public updateReward(msg.sender) checkStart override {
-        require(amount > 0, "BACDAIPool: Cannot stake 0");
+    function stake(uint256 amount)
+        public
+        override
+        updateReward(msg.sender)
+        checkStart
+    {
+        require(amount > 0, "FBGCashPool: Cannot stake 0");
         uint256 newDeposit = deposits[msg.sender] + amount;
         require(
             newDeposit <= 20000e18,
-            "BACDAIPool: deposit amount exceeds maximum 20000"
+            "FBGCashPool: deposit amount exceeds maximum 20000"
         );
         deposits[msg.sender] = newDeposit;
         super.stake(amount);
@@ -171,11 +179,11 @@ contract BACDAIPool is DAIWrapper, IRewardDistributionRecipient {
 
     function withdraw(uint256 amount)
         public
+        override
         updateReward(msg.sender)
         checkStart
-        override
     {
-        require(amount > 0, "BACDAIPool: Cannot withdraw 0");
+        require(amount > 0, "FBGCashPool: Cannot withdraw 0");
         super.withdraw(amount);
         emit Withdrawn(msg.sender, amount);
     }
@@ -196,9 +204,9 @@ contract BACDAIPool is DAIWrapper, IRewardDistributionRecipient {
 
     function notifyRewardAmount(uint256 reward)
         external
+        override
         onlyRewardDistribution
         updateReward(address(0))
-        override
     {
         if (block.timestamp > starttime) {
             if (block.timestamp >= periodFinish) {

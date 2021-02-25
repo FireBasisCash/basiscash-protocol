@@ -64,7 +64,7 @@ import "../interfaces/IRewardDistributionRecipient.sol";
 
 import "../token/LPTokenWrapper.sol";
 
-contract DAIBASLPTokenSharePool is
+contract FBGUSDTLPTokenSharePool is
     LPTokenWrapper,
     IRewardDistributionRecipient
 {
@@ -93,7 +93,7 @@ contract DAIBASLPTokenSharePool is
     modifier checkStart() {
         require(
             block.timestamp >= starttime,
-            "DAIBASLPTokenSharePool: not start"
+            "FBGUSDTLPTokenSharePool: not start"
         );
         _;
     }
@@ -141,11 +141,11 @@ contract DAIBASLPTokenSharePool is
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, "DAIBASLPTokenSharePool: Cannot stake 0");
+        require(amount > 0, "FBGUSDTLPTokenSharePool: Cannot stake 0");
         uint256 newDeposit = deposits[msg.sender] + amount;
         require(
             newDeposit <= 20000e18,
-            "DAIBASLPTokenSharePool: deposit amount exceeds maximum 20000"
+            "FBGUSDTLPTokenSharePool: deposit amount exceeds maximum 20000"
         );
         deposits[msg.sender] = newDeposit;
         super.stake(amount);
@@ -158,7 +158,7 @@ contract DAIBASLPTokenSharePool is
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, "DAIBASLPTokenSharePool: Cannot withdraw 0");
+        require(amount > 0, "FBGUSDTLPTokenSharePool: Cannot withdraw 0");
         super.withdraw(amount);
         emit Withdrawn(msg.sender, amount);
     }

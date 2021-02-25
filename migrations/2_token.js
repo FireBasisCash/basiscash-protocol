@@ -5,7 +5,8 @@
 const Cash = artifacts.require('Cash')
 const Bond = artifacts.require('Bond')
 const Share = artifacts.require('Share')
-const MockDai = artifacts.require('MockDai');
+const Governance = artifacts.require('Governance')
+const USDT = artifacts.require('USDT')
 
 // ============ Main Migration ============
 
@@ -21,15 +22,17 @@ async function deployToken(deployer, network, accounts) {
   await deployer.deploy(Cash);
   await deployer.deploy(Bond);
   await deployer.deploy(Share);
+  await deployer.deploy(Governance);
 
   if (network !== 'mainnet') {
-    await deployer.deploy(MockDai);
+    await deployer.deploy(USDT);
 
     // mint test balance
     const cash = await Cash.deployed();
     const bond = await Bond.deployed();
     const share = await Share.deployed();
-
+    const governance = await Governance.deployed();
+    const usdt = await USDT.deployed();
     const fifty_thousand = web3.utils
       .toBN(5 * 10 ** 4)
       .mul(web3.utils.toBN(10 ** 18))
@@ -38,6 +41,7 @@ async function deployToken(deployer, network, accounts) {
       cash.mint(accounts[0], fifty_thousand.toString(), { from: accounts[0] }),
       bond.mint(accounts[0], fifty_thousand.toString(), { from: accounts[0] }),
       share.mint(accounts[0], fifty_thousand.toString(), { from: accounts[0] }),
+      governance.mint(accounts[0], fifty_thousand.toString(), { from: accounts[0] }),
     ]);
   }
 }

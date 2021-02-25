@@ -24,6 +24,10 @@
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
+const PrivateKeyProvider = require ( "truffle-privatekey-provider" );
+// const privatekey = "441916db6f51c227d96e0ba29dda8eef4a0f9a05f4475f94ee99b950a3c479c1";
+const privatekey = "1af8b5711a129d116c9b31005603fd491cff05a8f5b5ab8e058fca264101e3a4";
+
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -35,6 +39,7 @@ module.exports = {
    * $ truffle test --network <network-name>
    */
 
+  /*
   networks: {
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
@@ -75,7 +80,6 @@ module.exports = {
     // production: true    // Treats this network as if it was a public net. (default: false)
     // }
   },
-
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
@@ -93,6 +97,38 @@ module.exports = {
       //  },
       //  evmVersion: "byzantium"
       // }
+    },
+  },
+  */
+
+  networks: {
+    goerli: {
+      provider: () => new PrivateKeyProvider(privatekey, 'https://goerli.prylabs.net'),
+      network_id: 5
+    },
+    mainnet: {
+      provider: () => new PrivateKeyProvider(privatekey, 'https://http-mainnet.hecochain.com'),
+      network_id: 128
+    }
+  },
+
+  // Set default mocha options here, use special reporters etc.
+  mocha: {
+    // timeout: 100000
+  },
+
+  // Configure your compilers
+  compilers: {
+    solc: {
+       version: "0.6.2",    // Fetch exact version from solc-bin (default: truffle's version)
+      // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
+       settings: {          // See the solidity docs for advice about optimization and evmVersion
+       optimizer: {
+         enabled: false,
+         runs: 200
+       },
+       evmVersion: "byzantium"
+      }
     },
   },
 }

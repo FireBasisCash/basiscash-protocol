@@ -4,7 +4,6 @@ const { bacPools } = require('./pools');
 // Tokens
 // deployed first
 const Cash = artifacts.require('Cash');
-const MockDai = artifacts.require('MockDai');
 
 // ============ Main Migration ============
 module.exports = async (deployer, network, accounts) => {

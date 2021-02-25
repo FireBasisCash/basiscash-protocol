@@ -4,7 +4,7 @@ import "../lib/Babylonian.sol";
 import "../lib/FixedPoint.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract MockOracle {
+contract USDTOracle {
     using FixedPoint for *;
 
     address public token0;
