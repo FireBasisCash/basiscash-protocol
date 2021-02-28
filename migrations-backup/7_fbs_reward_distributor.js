@@ -31,7 +31,7 @@ async function migration(deployer, network, accounts) {
 
   const lpPoolFBCUSDT = artifacts.require(fbsPools.FBCUSDT.contractName);
   const lpPoolFBSUSDT = artifacts.require(fbsPools.FBSUSDT.contractName);
-  const lpPoolFBGUSDT = artifacts.require(fbsPools.FBSUSDT.contractName);
+  const lpPoolFBGUSDT = artifacts.require(fbsPools.FBGUSDT.contractName);
 
   await deployer.deploy(
     InitialShareDistributor,

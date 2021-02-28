@@ -25,13 +25,14 @@ async function deployToken(deployer, network, accounts) {
   await deployer.deploy(Governance);
 
   if (network !== 'mainnet') {
+    await deployer.deploy(USDT);
+
     // mint test balance
     const cash = await Cash.deployed();
     const bond = await Bond.deployed();
     const share = await Share.deployed();
     const governance = await Governance.deployed();
     const usdt = await USDT.deployed();
-
     const fifty_thousand = web3.utils
       .toBN(5 * 10 ** 4)
       .mul(web3.utils.toBN(10 ** 18))
